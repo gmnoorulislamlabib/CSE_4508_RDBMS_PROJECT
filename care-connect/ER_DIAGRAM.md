@@ -1,7 +1,5 @@
+```mermaid
 erDiagram
-    %% -----------------------
-    %% CORE / AUTH
-    %% -----------------------
     USERS {
         int user_id PK
         string email
@@ -281,3 +279,4 @@ erDiagram
     INVOICES ||--o{ PAYMENTS : "1:0..* paid by"
 
     DOCTORS ||--|| VALID_MEDICAL_LICENSES : "1:1 has (license_number)" 
+```
