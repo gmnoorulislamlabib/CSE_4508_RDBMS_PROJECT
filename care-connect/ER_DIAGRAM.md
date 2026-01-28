@@ -1,5 +1,8 @@
 erDiagram
-    USERS {
+    %% =======================================================
+    %% 1. IDENTITY & ACCESS MANAGEMENT
+    %% =======================================================
+    users {
         int user_id PK
         string email
         string password_hash
@@ -8,7 +11,7 @@ erDiagram
         timestamp created_at
     }
 
-    PROFILES {
+    profiles {
         int profile_id PK
         int user_id FK
         string first_name
@@ -19,22 +22,28 @@ erDiagram
         enum gender
     }
 
-    DEPARTMENTS {
+    valid_medical_licenses {
+        string license_number PK
+        boolean is_registered
+    }
+
+    %% Identity Relationships
+    users ||--|| profiles : "has"
+    users ||--o| doctors : "is a"
+    users ||--o| patients : "is a"
+    users ||--o| staff : "is a"
+
+    %% =======================================================
+    %% 2. HR & STAFFING
+    %% =======================================================
+    departments {
         int dept_id PK
         string name
         string description
         string location
     }
 
-    ROOMS {
-        string room_number PK
-        enum room_type
-        decimal charge_per_day
-        boolean is_available
-        int current_doctor_id FK
-    }
-
-    DOCTORS {
+    doctors {
         int doctor_id PK
         int user_id FK
         int dept_id FK
@@ -44,15 +53,7 @@ erDiagram
         date joining_date
     }
 
-    PATIENTS {
-        int patient_id PK
-        int user_id FK
-        string blood_group
-        string emergency_contact_info
-        string insurance_provider
-    }
-
-    STAFF {
+    staff {
         int staff_id PK
         int user_id FK
         int dept_id FK
@@ -62,12 +63,75 @@ erDiagram
         date joining_date
     }
 
-    VALID_MEDICAL_LICENSES {
-        string license_number PK
-        boolean is_registered
+    schedules {
+        int schedule_id PK
+        int doctor_id FK
+        enum day_of_week
+        time start_time
+        time end_time
+        string room_number
     }
 
-    APPOINTMENTS {
+    doctor_leaves {
+        int leave_id PK
+        int doctor_id FK
+        date start_date
+        date end_date
+        string reason
+    }
+
+    staff_leaves {
+        int leave_id PK
+        int staff_id FK
+        date start_date
+        date end_date
+        string reason
+    }
+
+    %% HR Relationships
+    departments ||--o{ doctors : "employs"
+    departments ||--o{ staff : "employs"
+    doctors ||--o{ schedules : "has"
+    doctors ||--o{ doctor_leaves : "takes"
+    staff ||--o{ staff_leaves : "takes"
+
+    %% =======================================================
+    %% 3. PATIENT INTAKE & FACILITIES
+    %% =======================================================
+    patients {
+        int patient_id PK
+        int user_id FK
+        string blood_group
+        string emergency_contact_info
+        string insurance_provider
+    }
+
+    rooms {
+        string room_number PK
+        enum type
+        decimal charge_per_day
+        boolean is_available
+        int current_doctor_id
+    }
+
+    admissions {
+        int admission_id PK
+        int patient_id FK
+        string room_number FK
+        timestamp admission_date
+        timestamp discharge_date
+        decimal total_cost
+        enum status
+    }
+
+    %% Intake Relationships
+    patients ||--o{ admissions : "admitted to"
+    rooms ||--o{ admissions : "houses"
+
+    %% =======================================================
+    %% 4. CLINICAL OPERATIONS (Visits & Records)
+    %% =======================================================
+    appointments {
         int appointment_id PK
         int patient_id FK
         int doctor_id FK
@@ -77,7 +141,7 @@ erDiagram
         timestamp created_at
     }
 
-    MEDICAL_RECORDS {
+    medical_records {
         int record_id PK
         int appointment_id FK
         string diagnosis
@@ -87,32 +151,15 @@ erDiagram
         timestamp created_at
     }
 
-    PRESCRIPTIONS {
-        int prescription_id PK
-        int record_id FK
-        string notes
-        timestamp issued_at
-    }
+    %% Clinical Relationships
+    patients ||--o{ appointments : "books"
+    doctors ||--o{ appointments : "attends"
+    appointments ||--o| medical_records : "generates"
 
-    PRESCRIPTION_ITEMS {
-        int item_id PK
-        int prescription_id FK
-        int medicine_id FK
-        string dosage
-        string frequency
-        int duration_days
-    }
-
-    MEDICINES {
-        int medicine_id PK
-        string name
-        string manufacturer
-        decimal unit_price
-        int stock_quantity
-        date expiry_date
-    }
-
-    MEDICAL_TESTS {
+    %% =======================================================
+    %% 5. DIAGNOSTICS & LABS
+    %% =======================================================
+    medical_tests {
         int test_id PK
         string test_name
         decimal cost
@@ -120,7 +167,7 @@ erDiagram
         string assigned_room_number FK
     }
 
-    PATIENT_TESTS {
+    patient_tests {
         int record_id PK
         int patient_id FK
         int test_id FK
@@ -131,7 +178,7 @@ erDiagram
         string result_summary
     }
 
-    LAB_RESULTS {
+    lab_results {
         int result_id PK
         int record_id FK
         int test_id FK
@@ -139,7 +186,43 @@ erDiagram
         string remarks
     }
 
-    PHARMACY_ORDERS {
+    %% Lab Relationships
+    medical_tests ||--o{ patient_tests : "performed as"
+    patients ||--o{ patient_tests : "undergoes"
+    doctors ||--o{ patient_tests : "prescribes"
+    rooms ||--o{ medical_tests : "hosts"
+    rooms ||--o{ patient_tests : "conducted in"
+    medical_records ||--o{ lab_results : "contains"
+
+    %% =======================================================
+    %% 6. PHARMACY & INVENTORY
+    %% =======================================================
+    medicines {
+        int medicine_id PK
+        string name
+        string manufacturer
+        decimal unit_price
+        int stock_quantity
+        date expiry_date
+    }
+
+    prescriptions {
+        int prescription_id PK
+        int record_id FK
+        string notes
+        timestamp issued_at
+    }
+
+    prescription_items {
+        int item_id PK
+        int prescription_id FK
+        int medicine_id FK
+        string dosage
+        string frequency
+        int duration_days
+    }
+
+    pharmacy_orders {
         int order_id PK
         int patient_id FK
         decimal total_amount
@@ -147,7 +230,7 @@ erDiagram
         timestamp created_at
     }
 
-    PHARMACY_ORDER_ITEMS {
+    pharmacy_order_items {
         int item_id PK
         int order_id FK
         int medicine_id FK
@@ -155,20 +238,21 @@ erDiagram
         decimal unit_price
     }
 
-    ADMISSIONS {
-        int admission_id PK
-        int patient_id FK
-        string room_number FK
-        timestamp admission_date
-        timestamp discharge_date
-        decimal total_cost
-        enum status
-    }
+    %% Pharmacy Relationships
+    medical_records ||--o{ prescriptions : "contains"
+    prescriptions ||--o{ prescription_items : "includes"
+    medicines ||--o{ prescription_items : "supplied in"
+    patients ||--o{ pharmacy_orders : "orders"
+    pharmacy_orders ||--o{ pharmacy_order_items : "contains"
+    medicines ||--o{ pharmacy_order_items : "contains"
 
-    INVOICES {
+    %% =======================================================
+    %% 7. BILLING & FINANCE
+    %% =======================================================
+    invoices {
         int invoice_id PK
         int appointment_id FK
-        int patient_test_record_id FK
+        int test_record_id FK
         int admission_id FK
         int pharmacy_order_id FK
         decimal total_amount
@@ -177,7 +261,7 @@ erDiagram
         timestamp generated_at
     }
 
-    PAYMENTS {
+    payments {
         int payment_id PK
         int invoice_id FK
         decimal amount
@@ -186,32 +270,7 @@ erDiagram
         timestamp payment_date
     }
 
-    SCHEDULES {
-        int schedule_id PK
-        int doctor_id FK
-        enum day_of_week
-        time start_time
-        time end_time
-        string room_number
-    }
-
-    DOCTOR_LEAVES {
-        int leave_id PK
-        int doctor_id FK
-        date start_date
-        date end_date
-        string reason
-    }
-
-    STAFF_LEAVES {
-        int leave_id PK
-        int staff_id FK
-        date start_date
-        date end_date
-        string reason
-    }
-
-    HOSPITAL_EXPENSES {
+    hospital_expenses {
         int expense_id PK
         string category
         decimal amount
@@ -219,43 +278,9 @@ erDiagram
         timestamp expense_date
     }
 
-    USERS ||--|| PROFILES : has
-    USERS ||--o| DOCTORS : "is a"
-    USERS ||--o| PATIENTS : "is a"
-    USERS ||--o| STAFF : "is a"
-
-    DEPARTMENTS ||--o{ DOCTORS : employs
-    DEPARTMENTS ||--o{ STAFF : employs
-
-    DOCTORS ||--o{ SCHEDULES : has
-    DOCTORS ||--o{ DOCTOR_LEAVES : takes
-    STAFF ||--o{ STAFF_LEAVES : takes
-
-    PATIENTS ||--o{ APPOINTMENTS : books
-    DOCTORS ||--o{ APPOINTMENTS : attends
-
-    APPOINTMENTS ||--o| MEDICAL_RECORDS : generates
-    MEDICAL_RECORDS ||--o{ PRESCRIPTIONS : contains
-    PRESCRIPTIONS ||--o{ PRESCRIPTION_ITEMS : includes
-    MEDICINES ||--o{ PRESCRIPTION_ITEMS : used_in
-
-    MEDICAL_TESTS ||--o{ PATIENT_TESTS : defines
-    PATIENTS ||--o{ PATIENT_TESTS : undergoes
-    DOCTORS ||--o{ PATIENT_TESTS : orders
-    PATIENT_TESTS ||--o{ LAB_RESULTS : produces
-
-    PATIENTS ||--o{ ADMISSIONS : admitted
-    ROOMS ||--o{ ADMISSIONS : assigned
-
-    PATIENTS ||--o{ PHARMACY_ORDERS : places
-    PHARMACY_ORDERS ||--o{ PHARMACY_ORDER_ITEMS : contains
-    MEDICINES ||--o{ PHARMACY_ORDER_ITEMS : supplied
-
-    APPOINTMENTS ||--o{ INVOICES : billed
-    PATIENT_TESTS ||--o{ INVOICES : billed
-    ADMISSIONS ||--o{ INVOICES : billed
-    PHARMACY_ORDERS ||--o{ INVOICES : billed
-
-    INVOICES ||--o{ PAYMENTS : paid_by
-
-    DOCTORS ||--|| VALID_MEDICAL_LICENSES : licensed_with
+    %% Finance Relationships
+    appointments ||--o{ invoices : "bills"
+    pharmacy_orders ||--o{ invoices : "billed in"
+    patient_tests ||--o{ invoices : "billed in"
+    admissions ||--o{ invoices : "billed in"
+    invoices ||--o{ payments : "paid by"
