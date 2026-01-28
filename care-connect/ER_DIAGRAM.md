@@ -1,4 +1,3 @@
-```mermaid
 erDiagram
     USERS {
         int user_id PK
@@ -20,9 +19,6 @@ erDiagram
         enum gender
     }
 
-    %% -----------------------
-    %% ORGANIZATIONAL
-    %% -----------------------
     DEPARTMENTS {
         int dept_id PK
         string name
@@ -38,17 +34,6 @@ erDiagram
         int current_doctor_id FK
     }
 
-    HOSPITAL_EXPENSES {
-        int expense_id PK
-        string category
-        decimal amount
-        string description
-        timestamp expense_date
-    }
-
-    %% -----------------------
-    %% PEOPLE (roles tied to USERS)
-    %% -----------------------
     DOCTORS {
         int doctor_id PK
         int user_id FK
@@ -82,9 +67,6 @@ erDiagram
         boolean is_registered
     }
 
-    %% -----------------------
-    %% CLINICAL / ENCOUNTERS
-    %% -----------------------
     APPOINTMENTS {
         int appointment_id PK
         int patient_id FK
@@ -157,9 +139,6 @@ erDiagram
         string remarks
     }
 
-    %% -----------------------
-    %% PHARMACY / ORDERS
-    %% -----------------------
     PHARMACY_ORDERS {
         int order_id PK
         int patient_id FK
@@ -176,9 +155,6 @@ erDiagram
         decimal unit_price
     }
 
-    %% -----------------------
-    %% BILLING / ADMISSION / SCHEDULES
-    %% -----------------------
     ADMISSIONS {
         int admission_id PK
         int patient_id FK
@@ -191,7 +167,6 @@ erDiagram
 
     INVOICES {
         int invoice_id PK
-        /* nullable FKs: only one of these usually set (appointment / patient_test / admission / pharmacy_order) */
         int appointment_id FK
         int patient_test_record_id FK
         int admission_id FK
@@ -236,47 +211,51 @@ erDiagram
         string reason
     }
 
-    %% -----------------------
-    %% RELATIONSHIPS (read top->down)
-    %% -----------------------
-    USERS ||--|| PROFILES : "1:1 has"
-    USERS ||--o| DOCTORS : "1:0..1 is a"
-    USERS ||--o| PATIENTS : "1:0..1 is a"
-    USERS ||--o| STAFF : "1:0..1 is a"
+    HOSPITAL_EXPENSES {
+        int expense_id PK
+        string category
+        decimal amount
+        string description
+        timestamp expense_date
+    }
 
-    DEPARTMENTS ||--o{ DOCTORS : "1:0..* employs"
-    DEPARTMENTS ||--o{ STAFF : "1:0..* employs"
+    USERS ||--|| PROFILES : has
+    USERS ||--o| DOCTORS : "is a"
+    USERS ||--o| PATIENTS : "is a"
+    USERS ||--o| STAFF : "is a"
 
-    DOCTORS ||--o{ SCHEDULES : "1:0..* has"
-    DOCTORS ||--o{ DOCTOR_LEAVES : "1:0..* takes"
-    STAFF ||--o{ STAFF_LEAVES : "1:0..* takes"
+    DEPARTMENTS ||--o{ DOCTORS : employs
+    DEPARTMENTS ||--o{ STAFF : employs
 
-    PATIENTS ||--o{ APPOINTMENTS : "1:0..* books"
-    DOCTORS ||--o{ APPOINTMENTS : "1:0..* attends"
-    APPOINTMENTS ||--o| MEDICAL_RECORDS : "1:0..1 generates"
-    MEDICAL_RECORDS ||--o{ PRESCRIPTIONS : "1:0..* contains"
-    PRESCRIPTIONS ||--o{ PRESCRIPTION_ITEMS : "1:1..* includes"
-    MEDICINES ||--o{ PRESCRIPTION_ITEMS : "1:0..* supplied in"
+    DOCTORS ||--o{ SCHEDULES : has
+    DOCTORS ||--o{ DOCTOR_LEAVES : takes
+    STAFF ||--o{ STAFF_LEAVES : takes
 
-    MEDICAL_TESTS ||--o{ PATIENT_TESTS : "1:0..* performed as"
-    PATIENTS ||--o{ PATIENT_TESTS : "1:0..* undergoes"
-    DOCTORS ||--o{ PATIENT_TESTS : "1:0..* prescribes"
-    PATIENT_TESTS ||--o{ LAB_RESULTS : "1:0..* results"
-    MEDICAL_RECORDS ||--o{ LAB_RESULTS : "1:0..* contains"
+    PATIENTS ||--o{ APPOINTMENTS : books
+    DOCTORS ||--o{ APPOINTMENTS : attends
 
-    PATIENTS ||--o{ ADMISSIONS : "1:0..* admitted to"
-    ROOMS ||--o{ ADMISSIONS : "1:0..* houses"
+    APPOINTMENTS ||--o| MEDICAL_RECORDS : generates
+    MEDICAL_RECORDS ||--o{ PRESCRIPTIONS : contains
+    PRESCRIPTIONS ||--o{ PRESCRIPTION_ITEMS : includes
+    MEDICINES ||--o{ PRESCRIPTION_ITEMS : used_in
 
-    PATIENTS ||--o{ PHARMACY_ORDERS : "1:0..* orders"
-    PHARMACY_ORDERS ||--o{ PHARMACY_ORDER_ITEMS : "1:1..* contains"
-    MEDICINES ||--o{ PHARMACY_ORDER_ITEMS : "1:0..* included in"
+    MEDICAL_TESTS ||--o{ PATIENT_TESTS : defines
+    PATIENTS ||--o{ PATIENT_TESTS : undergoes
+    DOCTORS ||--o{ PATIENT_TESTS : orders
+    PATIENT_TESTS ||--o{ LAB_RESULTS : produces
 
-    APPOINTMENTS ||--o{ INVOICES : "1:0..* billed as"
-    PATIENT_TESTS ||--o{ INVOICES : "1:0..* billed as"
-    ADMISSIONS ||--o{ INVOICES : "1:0..* billed as"
-    PHARMACY_ORDERS ||--o{ INVOICES : "1:0..* billed as"
+    PATIENTS ||--o{ ADMISSIONS : admitted
+    ROOMS ||--o{ ADMISSIONS : assigned
 
-    INVOICES ||--o{ PAYMENTS : "1:0..* paid by"
+    PATIENTS ||--o{ PHARMACY_ORDERS : places
+    PHARMACY_ORDERS ||--o{ PHARMACY_ORDER_ITEMS : contains
+    MEDICINES ||--o{ PHARMACY_ORDER_ITEMS : supplied
 
-    DOCTORS ||--|| VALID_MEDICAL_LICENSES : "1:1 has (license_number)" 
-```
+    APPOINTMENTS ||--o{ INVOICES : billed
+    PATIENT_TESTS ||--o{ INVOICES : billed
+    ADMISSIONS ||--o{ INVOICES : billed
+    PHARMACY_ORDERS ||--o{ INVOICES : billed
+
+    INVOICES ||--o{ PAYMENTS : paid_by
+
+    DOCTORS ||--|| VALID_MEDICAL_LICENSES : licensed_with
