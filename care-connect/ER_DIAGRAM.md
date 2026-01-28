@@ -1,3 +1,4 @@
+```mermaid
 erDiagram
     %% =======================================================
     %% 1. IDENTITY & ACCESS MANAGEMENT
@@ -27,7 +28,6 @@ erDiagram
         boolean is_registered
     }
 
-    %% Identity Relationships
     users ||--|| profiles : "has"
     users ||--o| doctors : "is a"
     users ||--o| patients : "is a"
@@ -88,7 +88,6 @@ erDiagram
         string reason
     }
 
-    %% HR Relationships
     departments ||--o{ doctors : "employs"
     departments ||--o{ staff : "employs"
     doctors ||--o{ schedules : "has"
@@ -124,7 +123,6 @@ erDiagram
         enum status
     }
 
-    %% Intake Relationships
     patients ||--o{ admissions : "admitted to"
     rooms ||--o{ admissions : "houses"
 
@@ -151,7 +149,6 @@ erDiagram
         timestamp created_at
     }
 
-    %% Clinical Relationships
     patients ||--o{ appointments : "books"
     doctors ||--o{ appointments : "attends"
     appointments ||--o| medical_records : "generates"
@@ -186,7 +183,6 @@ erDiagram
         string remarks
     }
 
-    %% Lab Relationships
     medical_tests ||--o{ patient_tests : "performed as"
     patients ||--o{ patient_tests : "undergoes"
     doctors ||--o{ patient_tests : "prescribes"
@@ -238,7 +234,6 @@ erDiagram
         decimal unit_price
     }
 
-    %% Pharmacy Relationships
     medical_records ||--o{ prescriptions : "contains"
     prescriptions ||--o{ prescription_items : "includes"
     medicines ||--o{ prescription_items : "supplied in"
@@ -278,9 +273,9 @@ erDiagram
         timestamp expense_date
     }
 
-    %% Finance Relationships
     appointments ||--o{ invoices : "bills"
     pharmacy_orders ||--o{ invoices : "billed in"
     patient_tests ||--o{ invoices : "billed in"
     admissions ||--o{ invoices : "billed in"
     invoices ||--o{ payments : "paid by"
+```
